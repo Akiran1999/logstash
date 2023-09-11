@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash
+  namespace: default
+  labels: 
+    app: logstash
+data:
+  logstash.conf: |-
+    input {
+    beats {
+          host => "0.0.0.0"
+          port => "5044"
+          
+      }
+    }
+    filter {
+      grok {
+    match => {"message" => ": (?<message_a>%{GREEDYDATA})"}
+    }
+    }
+
+    output {
+        microsoft-logstash-output-azure-loganalytics {
+        workspace_id => "402372c2-9721-48e2-8ef9-3d98e62b7b7f" # <your workspace id>
+        workspace_key => "p5TyCJ1r+c3s7lkS+maKyDibzVT9Br7hNR4kJC9EmowGa5SXpwaGYjJkm/1kc2yaLXnqbtpObgo0ivXa2HzHSQ==" # <your workspace key>
+        custom_log_table_name => "AKS_Logs_DEV"
+      }
+    }

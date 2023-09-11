@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash
+  namespace: default
+spec:
+  serviceName: logstash
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: logstash-8.5.1:v1
+        env:
+          - name: BITNAMI_DEBUG
+            value: "true"
+          - name: LOGSTASH_CONF_FILENAME
+            value: "logstash.conf"
+          - name: LOGSTASH_ENABLE_MULTIPLE_PIPELINES
+            value: "true"
+          - name: LOGSTASH_EXPOSE_API
+            value: "yes"
+          - name: LOGSTASH_API_PORT_NUMBER
+            value: "9600"
+          - name: LOGSTASH_DATA_DIR
+            value: /bitnami/logstash/data
+        ports: 
+        - name: http
+          containerPort: 5044
+          protocol: TCP
+        - name: monitoring
+          containerPort: 9600
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/logstash/data
+        - name: configurations
+          mountPath: /bitnami/logstash/config
+      volumes:
+      - name: configurations
+        configMap:
+          name: logstash
+      - name: data
+        persistentVolumeClaim:
+          claimName: logstash-data-pvc-logstash-0
+  volumeClaimTemplates:
+  - metadata:
+      name: logstash-data-pvc
+    spec:
+      accessModes: 
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
